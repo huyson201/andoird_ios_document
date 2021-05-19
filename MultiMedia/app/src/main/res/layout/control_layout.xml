@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/control_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@drawable/player_bg"
+    android:padding="4dp">
+
+    <ImageView
+        android:id="@+id/preBtn"
+        android:src="@drawable/click_prebtn"
+        style="@style/controlBtn"/>
+
+    <ImageView
+        android:id="@+id/playBtn"
+        android:src="@drawable/click_playbtn"
+        style="@style/controlBtn"/>
+
+    <ImageView
+        android:id="@+id/pauseBtn"
+        android:src="@drawable/click_pausebtn"
+        style="@style/controlBtn"/>
+
+    <ImageView
+        android:id="@+id/stopBtn"
+        android:src="@drawable/click_stopbtn"
+        style="@style/controlBtn"/>
+
+    <ImageView
+        android:id="@+id/nextBtn"
+        android:src="@drawable/click_nextbtn"
+        style="@style/controlBtn"/>
+</LinearLayout>
