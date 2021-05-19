@@ -101,7 +101,7 @@ public class Player extends LinearLayout {
 
     }
 
-    public void setiPlayer(IPlayer iPlayer) {
+    public void setIPlayer(IPlayer iPlayer) {
         this.iPlayer = iPlayer;
     }
 
