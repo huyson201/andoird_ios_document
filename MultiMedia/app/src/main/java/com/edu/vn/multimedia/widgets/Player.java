@@ -40,8 +40,7 @@ public class Player extends LinearLayout {
             if (v.isSelected()){
                 v.setSelected(false);
             }
-
-            if(!v.isSelected()){
+            else {
 
                 v.setSelected(true);
 
@@ -60,19 +59,46 @@ public class Player extends LinearLayout {
 
                 switch (v.getId()){
                     case R.id.playBtn:
-                        iPlayer.onPlayAction();
+                        if(playBtn.isSelected()){
+                            iPlayer.onPlayAction();
+                        }else{
+                            pauseBtn.setSelected(true);
+                            iPlayer.onPauseAction();
+                        }
                         break;
                     case R.id.stopBtn:
-                        iPlayer.onStopAction();
+
+                        if(stopBtn.isSelected()){
+                            iPlayer.onStopAction();
+                        }else{
+                            iPlayer.onPlayAction();
+                            playBtn.setSelected(true);
+                        }
                         break;
                     case R.id.preBtn:
-                        iPlayer.onPrevAction();
+                        if(preBtn.isSelected()){
+                            iPlayer.onPrevAction();
+                        }else{
+                            iPlayer.onNextAction();
+                            nextBtn.setSelected(true);
+                        }
+
                         break;
                     case R.id.nextBtn:
-                        iPlayer.onNextAction();
+                        if(nextBtn.isSelected()){
+                            iPlayer.onNextAction();
+                        }else{
+                            iPlayer.onPrevAction();
+                            preBtn.setSelected(true);
+                        }
                         break;
                     case R.id.pauseBtn:
-                        iPlayer.onPauseAction();
+                        if(pauseBtn.isSelected()){
+                            iPlayer.onPauseAction();
+                        }else{
+                            iPlayer.onPlayAction();
+                            playBtn.setSelected(true);
+                        }
                         break;
                 }
             }
@@ -80,6 +106,25 @@ public class Player extends LinearLayout {
 
     };
 
+    public ImageView getPreBtn() {
+        return preBtn;
+    }
+
+    public ImageView getPlayBtn() {
+        return playBtn;
+    }
+
+    public ImageView getPauseBtn() {
+        return pauseBtn;
+    }
+
+    public ImageView getStopBtn() {
+        return stopBtn;
+    }
+
+    public ImageView getNextBtn() {
+        return nextBtn;
+    }
 
     private void init(){
 

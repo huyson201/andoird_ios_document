@@ -3,16 +3,25 @@ package com.edu.vn.multimedia;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
+
+import com.edu.vn.multimedia.services.MultiMediaService;
 import com.edu.vn.multimedia.widgets.IPlayer;
 import com.edu.vn.multimedia.widgets.Player;
 
@@ -22,28 +31,36 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements IPlayer {
     private Player controlPlayer;
-    private ArrayList<String> listMusics;
     private final int REQUEST_CODE = 1;
-    private int currentMusic = 0;
-    private MediaPlayer mediaPlayer;
+    private MultiMediaService multiMediaService;
+    private TextView lblMusicName;
+
+    // define service connection
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            multiMediaService = ((MultiMediaService.MultiMediaBinder) service).getMultiMediaService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Toast.makeText(MainActivity.this, "Disconnected MultiMediaService", Toast.LENGTH_SHORT).show();
+        }
+    };
 
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // request permission if false
-        if(!checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE)){
+        if (!checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},REQUEST_CODE);
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE);
             }
-        }else {
-            controlPlayer = findViewById(R.id.control_player);
-            controlPlayer.setIPlayer(this);
-            mediaPlayer = new MediaPlayer();
-            // get music
-            listMusics = getMusicPaths();
-            Log.d("musicPath", listMusics.toString());
+        } else {
+            init();
+
         }
 
 
@@ -52,33 +69,14 @@ public class MainActivity extends AppCompatActivity implements IPlayer {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode == REQUEST_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            mediaPlayer = new MediaPlayer();
-            controlPlayer = findViewById(R.id.control_player);
-            controlPlayer.setIPlayer(this);
-
-            // get music
-            listMusics = getMusicPaths();
-            Log.d("musicPath", listMusics.toString());
+        if (requestCode == REQUEST_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            init();
         }
     }
 
-    private ArrayList<String> getMusicPaths() {
-        ArrayList<String> musics = new ArrayList<String>();
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath());
-
-        if(file.listFiles() != null){
-            for (File fileItem: file.listFiles()) {
-                musics.add(fileItem.getAbsolutePath());
-            }
-        }else{
-            Toast.makeText(this, "Folder empty",Toast.LENGTH_LONG).show();
-        }
-        return musics;
-    }
 
     //check permission
-    private boolean checkPermission(String permission){
+    private boolean checkPermission(String permission) {
         int check = 0;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             check = checkSelfPermission(permission);
@@ -87,50 +85,68 @@ public class MainActivity extends AppCompatActivity implements IPlayer {
         return (check == PackageManager.PERMISSION_GRANTED);
     }
 
+    private void init() {
+        controlPlayer = findViewById(R.id.control_player);
+        controlPlayer.setIPlayer(this);
+        lblMusicName = findViewById(R.id.lbl_music_name);
+
+        //connecting service
+        Intent intent = new Intent(MainActivity.this, MultiMediaService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
 
     @Override
     public void onPlayAction() {
-        if(mediaPlayer != null){
-            if(listMusics.size() > 0){
-                Uri uri = Uri.parse(listMusics.get(currentMusic ));
-                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                try {
-                    mediaPlayer.setDataSource(this, uri);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
 
-                try {
-                    mediaPlayer.prepare();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                mediaPlayer.start();
-
-            }else{
-                Toast.makeText(this, "there aren't any music file", Toast.LENGTH_SHORT).show();
-            }
+        if (multiMediaService != null) {
+            multiMediaService.play();
+            String musicName = multiMediaService.getMusicName();
+            String[] array = musicName.split("/");
+            lblMusicName.setText(array[array.length - 1]);
         }
+
     }
 
     @Override
     public void onNextAction() {
+        if (multiMediaService != null) {
+            multiMediaService.next();
+        }
 
     }
 
     @Override
     public void onStopAction() {
+        if (multiMediaService != null) {
+            multiMediaService.stop();
+        }
 
     }
 
     @Override
     public void onPauseAction() {
-        mediaPlayer.pause();
+        if (multiMediaService != null) {
+            multiMediaService.pause();
+        }
+
     }
 
     @Override
     public void onPrevAction() {
+        if(multiMediaService != null){
+            multiMediaService.prev();
+        }
+    }
 
+    @Override
+    protected void onStop() {
+
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        unbindService(serviceConnection);
+        super.onDestroy();
     }
 }
